@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>viewly. — HTML Slide Previewer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #f0f4fa;
+    --bg2:        #e6edf8;
+    --glass:      rgba(255,255,255,0.68);
+    --glass-h:    rgba(255,255,255,0.90);
+    --border:     rgba(160,185,230,0.22);
+    --border-h:   rgba(100,145,220,0.40);
+    --cyan:       #00b4d8;
+    --lime:       #52b700;
+    --cyan-glow:  rgba(0,180,216,0.18);
+    --lime-glow:  rgba(82,183,0,0.14);
+    --cyan-dim:   rgba(0,180,216,0.10);
+    --lime-dim:   rgba(82,183,0,0.09);
+    --text:       #18202e;
+    --text-2:     rgba(24,32,46,0.55);
+    --text-3:     rgba(24,32,46,0.32);
+    --shadow:     0 4px 24px rgba(100,130,200,0.13);
+    --shadow-lg:  0 12px 48px rgba(80,110,190,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 50% at 15% 10%, rgba(0,180,216,0.09) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 60% at 85% 90%, rgba(82,183,0,0.07) 0%, transparent 70%);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ───────────────────────────── */
+  header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    background: var(--glass);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+    gap: 12px;
+  }
+
+  /* ── LOGO ─────────────────────────────── */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+
+  /* SVG logo mark */
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+
+  .logo-wordmark {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .logo-wordmark .vi { color: var(--cyan); }
+  .logo-wordmark .ew { color: var(--text); }
+  .logo-wordmark .ly {
+    color: var(--lime);
+  }
+
+  .logo-wordmark .dot {
+    color: var(--cyan);
+    font-weight: 300;
+  }
+
+  .logo-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    text-transform: uppercase;
+    padding: 3px 7px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.5);
+    backdrop-filter: blur(4px);
+    align-self: center;
+  }
+
+  /* ── ACTIONS ──────────────────────────── */
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 13px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--glass);
+    color: var(--text-2);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    letter-spacing: 0.01em;
+  }
+  .btn:hover {
+    background: var(--glass-h);
+    border-color: var(--border-h);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transform: translateY(-1px);
+  }
+  .btn:active { transform: translateY(0); box-shadow: none; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn.cyan {
+    background: var(--cyan-dim);
+    border-color: rgba(0,180,216,0.28);
+    color: var(--cyan);
+  }
+  .btn.cyan:hover {
+    background: rgba(0,180,216,0.18);
+    border-color: rgba(0,180,216,0.5);
+    box-shadow: 0 4px 16px var(--cyan-glow);
+  }
+
+  .btn.run {
+    background: linear-gradient(135deg, var(--lime) 0%, #3fa000 100%);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 2px 10px var(--lime-glow);
+  }
+  .btn.run:hover {
+    box-shadow: 0 4px 20px rgba(82,183,0,0.35);
+    transform: translateY(-1px);
+  }
+
+  /* ── WORKSPACE ────────────────────────── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── EDITOR ───────────────────────────── */
+  .editor-panel {
+    width: 40%;
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: rgba(255,255,255,0.38);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .panel-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.40);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .panel-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.11em;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+
+  .char-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  textarea {
+    flex: 1;
+    background: transparent;
+    color: var(--text);
+    border: none;
+    outline: none;
+    resize: none;
+    padding: 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    tab-size: 2;
+    caret-color: var(--cyan);
+  }
+  textarea::placeholder {
+    color: var(--text-3);
+    font-style: italic;
+    font-size: 11.5px;
+    line-height: 1.9;
+  }
+  textarea::-webkit-scrollbar { width: 4px; }
+  textarea::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ── RESIZER ──────────────────────────── */
+  .resizer {
+    width: 3px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .resizer:hover { background: var(--cyan); }
+
+  /* ── PREVIEW PANEL ────────────────────── */
+  .preview-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .preview-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.40);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-3);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .status-dot.active {
+    background: var(--lime);
+    box-shadow: 0 0 5px var(--lime-glow);
+  }
+  .status-dot.loading {
+    background: var(--cyan);
+    box-shadow: 0 0 5px var(--cyan-glow);
+    animation: blink 0.7s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+  .status-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--text-3);
+  }
+
+  .slide-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-3);
+  }
+
+  iframe {
+    flex: 1;
+    border: none;
+    background: white;
+  }
+
+  /* ── EMPTY STATE ──────────────────────── */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 48px;
+    text-align: center;
+  }
+
+  /* The VIEWLY logo as a large decorative element */
+  .empty-logo-big {
+    opacity: 0.18;
+    font-family: 'Outfit', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    user-select: none;
+  }
+  .empty-logo-big .v { color: var(--cyan); }
+  .empty-logo-big .l { color: var(--lime); }
+
+  .empty-state h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.35;
+    letter-spacing: -0.01em;
+  }
+
+  .empty-state p {
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--text-3);
+    max-width: 260px;
+  }
+
+  .shortcut-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .key {
+    background: rgba(255,255,255,0.70);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--text-2);
+    box-shadow: 0 1px 3px rgba(100,130,200,0.1);
+  }
+
+  .shortcut-row span {
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  /* ── PDF OVERLAY ──────────────────────── */
+  .pdf-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(230,237,248,0.72);
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+  }
+  .pdf-overlay.show { display: flex; }
+
+  .pdf-box {
+    background: var(--glass-h);
+    border: 1px solid var(--border-h);
+    border-radius: 18px;
+    padding: 38px 48px;
+    text-align: center;
+    min-width: 300px;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.9) inset,
+      var(--shadow-lg);
+  }
+
+  .pdf-spinner {
+    width: 36px; height: 36px;
+    border: 2.5px solid var(--border);
+    border-top-color: var(--cyan);
+    border-right-color: var(--lime);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 18px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .pdf-box h4 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .pdf-box p {
+    font-size: 12px;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+
+  .pdf-progress {
+    margin-top: 20px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .pdf-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--cyan), var(--lime));
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+
+  /* ── TOAST ────────────────────────────── */
+  .toast {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    background: var(--glass-h);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-h);
+    color: var(--text);
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.22s ease;
+    pointer-events: none;
+    z-index: 300;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.ok {
+    border-color: rgba(82,183,0,0.35);
+    color: var(--lime);
+    background: rgba(255,255,255,0.88);
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <!-- SVG logo mark: stylized V with glass refraction slash -->
+    <svg class="logo-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="vg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#00b4d8"/>
+          <stop offset="100%" stop-color="#52b700"/>
+        </linearGradient>
+        <linearGradient id="sg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.8)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0.2)"/>
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <!-- rounded square backdrop -->
+      <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#vg)" opacity="0.12"/>
+      <rect x="1" y="1" width="30" height="30" rx="8" stroke="url(#vg)" stroke-width="1.5" fill="none" opacity="0.5"/>
+      <!-- V shape -->
+      <path d="M7 9 L16 23 L25 9" stroke="url(#vg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)"/>
+      <!-- glass slash highlight -->
+      <line x1="20" y1="7" x2="13" y2="25" stroke="url(#sg)" stroke-width="1.5" stroke-linecap="round" opacity="0.7"/>
+    </svg>
+
+    <span class="logo-wordmark"><span class="vi">vi</span><span class="ew">ew</span><span class="ly">ly</span><span class="dot">.</span></span>
+    <span class="logo-tag">slide previewer</span>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="clearCode()">✕ クリア</button>
+    <button class="btn" onclick="copyCode()">⧉ コピー</button>
+    <button class="btn" onclick="downloadHTML()">↓ HTML保存</button>
+    <button class="btn cyan" id="pdfBtn" onclick="generatePDF()" disabled>⬇ PDF生成</button>
+    <button class="btn run" onclick="renderCode()">▶ Run</button>
+  </div>
+</header>
+
+<div class="workspace">
+
+  <div class="editor-panel" id="editorPanel">
+    <div class="panel-bar">
+      <span class="panel-label">source</span>
+      <span class="char-count" id="charCount">0 chars</span>
+    </div>
+    <textarea
+      id="codeInput"
+      placeholder="ここにHTMLコードをペースト！
+
+GeminiやChatGPTで生成したスライドのHTMLを
+そのまま貼り付けてね。
+
+▶ Run か Ctrl+Enter で即プレビュー。
+PDF生成はダイアログなしで直接ダウンロード。"
+      oninput="updateCharCount()"
+      onkeydown="handleKeydown(event)"
+    ></textarea>
+  </div>
+
+  <div class="resizer" id="resizer"></div>
+
+  <div class="preview-panel">
+    <div class="preview-bar">
+      <div class="status-row">
+        <span class="status-dot" id="statusDot"></span>
+        <span class="status-label" id="statusLabel">ready</span>
+      </div>
+      <span class="slide-count" id="slideCount"></span>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="empty-logo-big"><span class="v">v</span>iewl<span class="l">y</span><span style="opacity:0.6">.</span></div>
+      <h3>コードを貼り付けよう</h3>
+      <p>左にHTMLをペーストして ▶ Run を押すと、ここにプレビューが表示されるよ。</p>
+      <div class="shortcut-row">
+        <span class="key">Ctrl</span><span>+</span><span class="key">Enter</span>
+        <span>でもOK</span>
+      </div>
+    </div>
+
+    <iframe id="preview" style="display:none;"></iframe>
+  </div>
+</div>
+
+<!-- PDF Overlay -->
+<div class="pdf-overlay" id="pdfOverlay">
+  <div class="pdf-box">
+    <div class="pdf-spinner"></div>
+    <h4>PDFを生成中...</h4>
+    <p id="pdfStatus">フォントの読み込みを待っています</p>
+    <div class="pdf-progress"><div class="pdf-bar" id="pdfBar"></div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+let previewReady = false;
+
+function updateCharCount() {
+  const len = document.getElementById('codeInput').value.length;
+  document.getElementById('charCount').textContent = len.toLocaleString() + ' chars';
+}
+
+function handleKeydown(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    renderCode();
+  }
+}
+
+function renderCode() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) { showToast('コードを貼り付けてね！'); return; }
+
+  const preview    = document.getElementById('preview');
+  const emptyState = document.getElementById('emptyState');
+  const dot        = document.getElementById('statusDot');
+  const label      = document.getElementById('statusLabel');
+
+  dot.className = 'status-dot loading';
+  label.textContent = 'loading...';
+
+  emptyState.style.display = 'none';
+  preview.style.display = 'block';
+
+  const doc = preview.contentDocument || preview.contentWindow.document;
+  doc.open();
+  doc.write(code);
+  doc.close();
+
+  // Font smoothing hint
+  setTimeout(() => {
+    try {
+      const s = preview.contentDocument.createElement('style');
+      s.textContent = '* { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }';
+      preview.contentDocument.head.appendChild(s);
+    } catch(e) {}
+  }, 80);
+
+  setTimeout(() => {
+    dot.className = 'status-dot active';
+    label.textContent = 'live';
+    previewReady = true;
+    document.getElementById('pdfBtn').disabled = false;
+
+    try {
+      const slides = preview.contentDocument.querySelectorAll('.slide');
+      document.getElementById('slideCount').textContent =
+        slides.length > 0 ? slides.length + ' slides' : '';
+    } catch(e) {}
+
+    showToast('プレビュー完了！', 'ok');
+  }, 700);
+}
+
+function clearCode() {
+  if (!confirm('コードをクリアするよ？')) return;
+  document.getElementById('codeInput').value = '';
+  updateCharCount();
+  document.getElementById('preview').style.display = 'none';
+  document.getElementById('emptyState').style.display = 'flex';
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusLabel').textContent = 'ready';
+  document.getElementById('slideCount').textContent = '';
+  document.getElementById('pdfBtn').disabled = true;
+  previewReady = false;
+  showToast('クリアしたよ！');
+}
+
+function copyCode() {
+  const code = document.getElementById('codeInput').value;
+  if (!code) { showToast('コードがないよ！'); return; }
+  navigator.clipboard.writeText(code).then(() => showToast('コピーしたよ！', 'ok'));
+}
+
+function downloadHTML() {
+  const code = document.getElementById('codeInput').value.trim();
+  if (!code) { showToast('コードを入力してね！'); return; }
+  const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = 'viewly_' + new Date().toISOString().slice(0,10) + '.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('HTMLファイルを保存したよ！');
+}
+
+// ── PDF Generation ────────────────────────────────────────────
+async function generatePDF() {
+  if (!previewReady) { showToast('先にプレビューしてね！'); return; }
+
+  const overlay   = document.getElementById('pdfOverlay');
+  const bar       = document.getElementById('pdfBar');
+  const status    = document.getElementById('pdfStatus');
+  overlay.classList.add('show');
+
+  try {
+    const iframe    = document.getElementById('preview');
+    const iframeDoc = iframe.contentDocument;
+    const iframeWin = iframe.contentWindow;
+    const { jsPDF } = window.jspdf;
+
+    // Wait for fonts
+    status.textContent = 'フォントの読み込みを待っています...';
+    bar.style.width = '8%';
+    try { if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready; } catch(e) {}
+    await new Promise(r => setTimeout(r, 900));
+    bar.style.width = '18%';
+
+    // Reset scale
+    const container = iframeDoc.getElementById('deck')
+                   || iframeDoc.querySelector('.slide-container')
+                   || null;
+
+    let origTransform = '', origW = '', origH = '';
+    if (container) {
+      origTransform = container.style.transform;
+      origW = container.style.width;
+      origH = container.style.height;
+      container.style.transform = 'none';
+      container.style.width     = '1280px';
+      container.style.height    = '720px';
+    }
+    await new Promise(r => setTimeout(r, 150));
+
+    const slides = iframeDoc.querySelectorAll('.slide');
+    bar.style.width = '22%';
+
+    if (slides.length === 0) {
+      status.textContent = 'ページ全体をキャプチャ中...';
+      const canvas = await html2canvas(iframeDoc.body, {
+        scale: 1.5, useCORS: true, allowTaint: true,
+        backgroundColor: '#ffffff', logging: false,
+      });
+      bar.style.width = '90%';
+      const w = canvas.width / 1.5, h = canvas.height / 1.5;
+      const pdf = new jsPDF({ orientation: w > h ? 'landscape' : 'portrait', unit: 'px', format: [w, h] });
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, w, h);
+      bar.style.width = '100%';
+      await new Promise(r => setTimeout(r, 100));
+      pdf.save('viewly_' + new Date().toISOString().slice(0,10) + '.pdf');
+
+    } else {
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [1280, 720] });
+      const activeSlide = iframeDoc.querySelector('.slide.active');
+
+      for (let i = 0; i < slides.length; i++) {
+        status.textContent = `スライド ${i+1} / ${slides.length} をキャプチャ中...`;
+        bar.style.width = (22 + (i / slides.length) * 72) + '%';
+
+        slides.forEach(s => {
+          s.style.opacity = '0'; s.style.pointerEvents = 'none';
+          s.style.zIndex = '1'; s.style.position = 'absolute';
+          s.style.display = 'flex';  // force show even if display:none
+        });
+        slides[i].style.opacity = '1';
+        slides[i].style.zIndex  = '10';
+
+        await new Promise(r => setTimeout(r, 120));
+
+        // スライドの実際の背景色を取得（黒背景対応）
+        const slideBg = iframeWin.getComputedStyle(slides[i]).backgroundColor || null;
+        const bgColor = (!slideBg || slideBg === 'rgba(0, 0, 0, 0)') ? null : slideBg;
+
+        const canvas = await html2canvas(slides[i], {
+          scale: 1.5, useCORS: true, allowTaint: true,
+          backgroundColor: bgColor, logging: false,
+          width: 1280, height: 720,
+          windowWidth: 1280, windowHeight: 720,
+          x: 0, y: 0,
+          scrollX: 0, scrollY: 0,
+          onclone: (cloned) => {
+            const s = cloned.createElement('style');
+            s.textContent = '* { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }';
+            cloned.head.appendChild(s);
+          }
+        });
+
+        if (i > 0) pdf.addPage([1280, 720], 'landscape');
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.94), 'JPEG', 0, 0, 1280, 720);
+      }
+
+      slides.forEach(s => {
+        s.style.opacity = ''; s.style.pointerEvents = '';
+        s.style.zIndex = ''; s.style.position = '';
+        s.style.display = '';  // restore to CSS default
+      });
+      if (activeSlide) {
+        activeSlide.style.opacity = '1';
+        activeSlide.style.zIndex  = '10';
+      }
+
+      bar.style.width = '100%';
+      await new Promise(r => setTimeout(r, 150));
+      pdf.save('viewly_' + new Date().toISOString().slice(0,10) + '.pdf');
+    }
+
+    if (container) {
+      container.style.transform = origTransform;
+      container.style.width     = origW;
+      container.style.height    = origH;
+    }
+    if (iframeWin.resizeContainer) iframeWin.resizeContainer();
+
+    showToast('PDF完成！ダウンロードしたよ 🎉', 'ok');
+
+  } catch(err) {
+    console.error(err);
+    showToast('PDF生成でエラーが出たよ…');
+  } finally {
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      bar.style.width = '0%';
+      status.textContent = 'フォントの読み込みを待っています';
+    }, 500);
+  }
+}
+
+// ── Toast ──────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (type ? ' ' + type : '') + ' show';
+  clearTimeout(t._tid);
+  t._tid = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// ── Resizer ────────────────────────────────────────────────────
+const resizer     = document.getElementById('resizer');
+const editorPanel = document.getElementById('editorPanel');
+let isDragging    = false;
+
+resizer.addEventListener('mousedown', () => {
+  isDragging = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+});
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const rect = document.querySelector('.workspace').getBoundingClientRect();
+  const w = Math.min(Math.max(e.clientX - rect.left, 220), rect.width - 280);
+  editorPanel.style.width = w + 'px';
+});
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+});
+</script>
+</body>
+</html>
