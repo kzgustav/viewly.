@@ -71,7 +71,6 @@
     text-decoration: none;
   }
 
-  /* SVG logo mark */
   .logo-mark {
     width: 32px;
     height: 32px;
@@ -89,14 +88,8 @@
 
   .logo-wordmark .vi { color: var(--accent); }
   .logo-wordmark .ew { color: var(--text); }
-  .logo-wordmark .ly {
-    color: var(--accent2);
-  }
-
-  .logo-wordmark .dot {
-    color: var(--accent);
-    font-weight: 300;
-  }
+  .logo-wordmark .ly { color: var(--accent2); }
+  .logo-wordmark .dot { color: var(--accent); font-weight: 300; }
 
   .logo-tag {
     font-family: 'DM Mono', monospace;
@@ -328,7 +321,6 @@
     text-align: center;
   }
 
-  /* The VIEWLY logo as a large decorative element */
   .empty-logo-big {
     opacity: 0.18;
     font-family: 'Outfit', sans-serif;
@@ -483,7 +475,6 @@
 
 <header>
   <div class="logo">
-    <!-- SVG logo mark: matches app icon style -->
     <svg class="logo-mark" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="bg-grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
@@ -500,18 +491,12 @@
           <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="#8b7baf" flood-opacity="0.25"/>
         </filter>
       </defs>
-      <!-- rounded square background -->
       <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bg-grad)"/>
-      <!-- glass overlay -->
       <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#glass-shine)"/>
-      <!-- subtle inner border -->
       <rect x="1.5" y="1.5" width="29" height="29" rx="7.5" stroke="rgba(255,255,255,0.45)" stroke-width="0.8" fill="none"/>
-      <!-- white V mark -->
       <path d="M8 9.5 L16 22.5 L24 9.5" stroke="white" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#v-shadow)"/>
-      <!-- small dot (matching icon) -->
       <circle cx="25" cy="22" r="1.6" fill="white" opacity="0.7"/>
     </svg>
-
     <span class="logo-wordmark"><span class="vi">vi</span><span class="ew">ew</span><span class="ly">ly</span><span class="dot">.</span></span>
     <span class="logo-tag">slide previewer</span>
   </div>
@@ -567,7 +552,7 @@ PDF生成はダイアログなしで直接ダウンロード。"
       </div>
     </div>
 
-    <iframe id="preview" style="display:none;"></iframe>
+    <iframe id="preview" style="display:none;" sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>
   </div>
 </div>
 
@@ -601,6 +586,7 @@ function handleKeydown(e) {
   }
 }
 
+// ── RENDER（修正版：srcdoc + onload待機） ─────────────────────
 function renderCode() {
   const code = document.getElementById('codeInput').value.trim();
   if (!code) { showToast('コードを貼り付けてね！'); return; }
@@ -616,41 +602,61 @@ function renderCode() {
   emptyState.style.display = 'none';
   preview.style.display = 'block';
 
-  const doc = preview.contentDocument || preview.contentWindow.document;
-  doc.open();
-  doc.write(code);
-  doc.close();
+  // ★ 修正ポイント1: srcdocを使って書き込む
+  // srcdocはiframe内で完全なHTMLドキュメントとして解釈されるため
+  // <link>や<script>の外部リソースが正しく読み込まれる
+  preview.srcdoc = code;
 
-  // Font smoothing hint
-  setTimeout(() => {
+  // ★ 修正ポイント2: iframeのonloadで読み込み完了を待つ
+  preview.onload = () => {
+    const iframeDoc = preview.contentDocument;
+
+    // フォントスムージング
     try {
-      const s = preview.contentDocument.createElement('style');
+      const s = iframeDoc.createElement('style');
       s.textContent = '* { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }';
-      preview.contentDocument.head.appendChild(s);
-    } catch(e) {}
-  }, 80);
-
-  setTimeout(() => {
-    dot.className = 'status-dot active';
-    label.textContent = 'live';
-    previewReady = true;
-    document.getElementById('pdfBtn').disabled = false;
-
-    try {
-      const slides = preview.contentDocument.querySelectorAll('.slide');
-      document.getElementById('slideCount').textContent =
-        slides.length > 0 ? slides.length + ' slides' : '';
+      iframeDoc.head.appendChild(s);
     } catch(e) {}
 
-    showToast('プレビュー完了！', 'ok');
-  }, 700);
+    // ★ 修正ポイント3: フォント読み込みも待つ
+    const finalize = () => {
+      dot.className = 'status-dot active';
+      label.textContent = 'live';
+      previewReady = true;
+      document.getElementById('pdfBtn').disabled = false;
+
+      try {
+        const slides = iframeDoc.querySelectorAll('.slide');
+        document.getElementById('slideCount').textContent =
+          slides.length > 0 ? slides.length + ' slides' : '';
+      } catch(e) {}
+
+      showToast('プレビュー完了！', 'ok');
+    };
+
+    // iframe内のフォント読み込みを待機
+    if (iframeDoc.fonts && iframeDoc.fonts.ready) {
+      iframeDoc.fonts.ready.then(() => {
+        // フォント読み込み後、少し待ってレイアウト確定
+        setTimeout(finalize, 200);
+      }).catch(() => {
+        setTimeout(finalize, 500);
+      });
+    } else {
+      // fonts API非対応の場合はタイマーで待つ
+      setTimeout(finalize, 800);
+    }
+  };
 }
 
 function clearCode() {
   if (!confirm('コードをクリアするよ？')) return;
   document.getElementById('codeInput').value = '';
   updateCharCount();
-  document.getElementById('preview').style.display = 'none';
+  const preview = document.getElementById('preview');
+  preview.style.display = 'none';
+  preview.srcdoc = '';
+  preview.onload = null;
   document.getElementById('emptyState').style.display = 'flex';
   document.getElementById('statusDot').className = 'status-dot';
   document.getElementById('statusLabel').textContent = 'ready';
@@ -694,14 +700,12 @@ async function generatePDF() {
     const iframeWin = iframe.contentWindow;
     const { jsPDF } = window.jspdf;
 
-    // Wait for fonts
     status.textContent = 'フォントの読み込みを待っています...';
     bar.style.width = '8%';
     try { if (iframeDoc.fonts?.ready) await iframeDoc.fonts.ready; } catch(e) {}
     await new Promise(r => setTimeout(r, 900));
     bar.style.width = '18%';
 
-    // Reset scale
     const container = iframeDoc.getElementById('deck')
                    || iframeDoc.querySelector('.slide-container')
                    || null;
@@ -745,14 +749,13 @@ async function generatePDF() {
         slides.forEach(s => {
           s.style.opacity = '0'; s.style.pointerEvents = 'none';
           s.style.zIndex = '1'; s.style.position = 'absolute';
-          s.style.display = 'flex';  // force show even if display:none
+          s.style.display = 'flex';
         });
         slides[i].style.opacity = '1';
         slides[i].style.zIndex  = '10';
 
         await new Promise(r => setTimeout(r, 120));
 
-        // スライドの実際の背景色を取得（黒背景対応）
         const slideBg = iframeWin.getComputedStyle(slides[i]).backgroundColor || null;
         const bgColor = (!slideBg || slideBg === 'rgba(0, 0, 0, 0)') ? null : slideBg;
 
@@ -777,7 +780,7 @@ async function generatePDF() {
       slides.forEach(s => {
         s.style.opacity = ''; s.style.pointerEvents = '';
         s.style.zIndex = ''; s.style.position = '';
-        s.style.display = '';  // restore to CSS default
+        s.style.display = '';
       });
       if (activeSlide) {
         activeSlide.style.opacity = '1';
